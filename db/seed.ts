@@ -12,18 +12,25 @@ const db = drizzle(client, { schema });
 async function createUser(email: string, name: string, password: string, roleName: string) {
   const { hashPassword } = await import("better-auth/crypto");
   const hashedPassword = await hashPassword(password);
-  const userId = randomUUID();
 
+  // Insert user (idempotent)
   await db
     .insert(schema.user)
-    .values({ id: userId, name, email, emailVerified: true })
+    .values({ id: randomUUID(), name, email, emailVerified: true })
     .onConflictDoNothing();
 
+  // Look up actual user ID (insert may have been skipped)
+  const existing = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1);
+  if (!existing[0]) throw new Error(`Failed to create user: ${email}`);
+  const userId = existing[0].id;
+
+  // Insert credential account (idempotent)
   await db
     .insert(schema.account)
     .values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: hashedPassword })
     .onConflictDoNothing();
 
+  // Assign role
   const role = await db.select().from(schema.roles).where(eq(schema.roles.name, roleName)).limit(1);
   if (role[0]) {
     await db
@@ -32,9 +39,7 @@ async function createUser(email: string, name: string, password: string, roleNam
       .onConflictDoNothing();
   }
 
-  // Return actual user id (may differ if onConflictDoNothing skipped insert)
-  const existing = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1);
-  return existing[0]?.id ?? userId;
+  return userId;
 }
 
 async function seed() {
@@ -55,11 +60,14 @@ async function seed() {
   const permMap = new Map(permRows.map((p) => [p.key, p.id]));
 
   for (const [constName, roleValue] of Object.entries(ROLES)) {
-    const roleId = randomUUID();
     await db
       .insert(schema.roles)
-      .values({ id: roleId, name: roleValue, displayName: constName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) })
+      .values({ id: randomUUID(), name: roleValue, displayName: constName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) })
       .onConflictDoNothing();
+
+    const existingRole = await db.select().from(schema.roles).where(eq(schema.roles.name, roleValue)).limit(1);
+    if (!existingRole[0]) continue;
+    const roleId = existingRole[0].id;
 
     const permKeys = ROLE_PERMISSIONS[roleValue as keyof typeof ROLE_PERMISSIONS];
     for (const pk of permKeys) {
