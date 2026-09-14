@@ -60,6 +60,9 @@ export const QueueType = {
   RECEPTION: "reception",
   TRIAGE: "triage",
   CONSULTATION: "consultation",
+  LABORATORY: "laboratory",
+  RADIOLOGY: "radiology",
+  PHARMACY: "pharmacy",
 } as const;
 export type QueueType = (typeof QueueType)[keyof typeof QueueType];
 
@@ -109,3 +112,75 @@ export const DiagnosisStatus = {
   RESOLVED: "resolved",
 } as const;
 export type DiagnosisStatus = (typeof DiagnosisStatus)[keyof typeof DiagnosisStatus];
+
+export const OrderType = {
+  LABORATORY: "laboratory",
+  RADIOLOGY: "radiology",
+  MEDICATION: "medication",
+  PROCEDURE: "procedure",
+  REFERRAL: "referral",
+} as const;
+export type OrderType = (typeof OrderType)[keyof typeof OrderType];
+
+export const OrderStatus = {
+  DRAFT: "draft",
+  ORDERED: "ordered",
+  ACKNOWLEDGED: "acknowledged",
+  IN_PROGRESS: "in_progress",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+  REJECTED: "rejected",
+} as const;
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
+
+export const SpecimenStatus = {
+  COLLECTED: "collected",
+  IN_PROCESSING: "in_processing",
+  COMPLETED: "completed",
+  REJECTED: "rejected",
+} as const;
+export type SpecimenStatus = (typeof SpecimenStatus)[keyof typeof SpecimenStatus];
+
+export const LabResultStatus = {
+  ENTERED: "entered",
+  VALIDATED: "validated",
+  RELEASED: "released",
+  AMENDED: "amended",
+} as const;
+export type LabResultStatus = (typeof LabResultStatus)[keyof typeof LabResultStatus];
+
+export const StudyStatus = {
+  SCHEDULED: "scheduled",
+  IN_PROGRESS: "in_progress",
+  COMPLETED: "completed",
+} as const;
+export type StudyStatus = (typeof StudyStatus)[keyof typeof StudyStatus];
+
+export const ReportStatus = {
+  DRAFT: "draft",
+  FINALIZED: "finalized",
+} as const;
+export type ReportStatus = (typeof ReportStatus)[keyof typeof ReportStatus];
+
+export const PrescriptionStatus = {
+  PENDING: "pending",
+  DISPENSED: "dispensed",
+  CANCELLED: "cancelled",
+} as const;
+export type PrescriptionStatus = (typeof PrescriptionStatus)[keyof typeof PrescriptionStatus];
+
+export const DispensingStatus = {
+  PENDING: "pending",
+  COMPLETED: "completed",
+} as const;
+export type DispensingStatus = (typeof DispensingStatus)[keyof typeof DispensingStatus];
+
+export const StockMovementType = {
+  IN: "IN",
+  OUT: "OUT",
+  RETURN: "RETURN",
+  ADJUSTMENT: "ADJUSTMENT",
+  TRANSFER: "TRANSFER",
+  EXPIRED: "EXPIRED",
+} as const;
+export type StockMovementType = (typeof StockMovementType)[keyof typeof StockMovementType];

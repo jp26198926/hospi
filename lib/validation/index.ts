@@ -21,9 +21,18 @@ export const encounterStatusSchema = z.enum([
 export const appointmentStatusSchema = z.enum([
   "scheduled", "confirmed", "checked_in", "in_progress", "completed", "cancelled", "no_show",
 ]);
-export const queueTypeSchema = z.enum(["reception", "triage", "consultation"]);
+export const queueTypeSchema = z.enum(["reception", "triage", "consultation", "laboratory", "radiology", "pharmacy"]);
 export const queuePrioritySchema = z.enum(["normal", "urgent", "emergency"]);
 export const queueStatusSchema = z.enum(["waiting", "called", "in_progress", "completed", "cancelled"]);
 export const triageCategorySchema = z.enum(["emergency", "urgent", "semi-urgent", "non-urgent", "stable"]);
 export const consultationStatusSchema = z.enum(["draft", "finalized"]);
 export const diagnosisTypeSchema = z.enum(["clinical", "provisional", "admitting", "discharge", "final"]);
+export const orderTypeSchema = z.enum(["laboratory", "radiology", "medication", "procedure", "referral"]);
+export const orderStatusSchema = z.enum(["draft", "ordered", "acknowledged", "in_progress", "completed", "cancelled", "rejected"]);
+export const specimenStatusSchema = z.enum(["collected", "in_processing", "completed", "rejected"]);
+export const labResultStatusSchema = z.enum(["entered", "validated", "released", "amended"]);
+export const studyStatusSchema = z.enum(["scheduled", "in_progress", "completed"]);
+export const reportStatusSchema = z.enum(["draft", "finalized"]);
+export const prescriptionStatusSchema = z.enum(["pending", "dispensed", "cancelled"]);
+export const dispensingStatusSchema = z.enum(["pending", "completed"]);
+export const stockMovementTypeSchema = z.enum(["IN", "OUT", "RETURN", "ADJUSTMENT", "TRANSFER", "EXPIRED"]);

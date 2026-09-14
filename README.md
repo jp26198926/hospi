@@ -8,16 +8,22 @@ Open-source modular-monolith Hospital Management System built with Next.js 16, R
 |---|---|---|
 | 1. Foundation | ✅ Complete | Auth, RBAC, audit, errors, base layout, UI system |
 | 2. Core Patient Flow | ✅ Complete | Patient, Reception, Encounter, Queue, Triage, Consultation, Appointments, Diagnosis |
-| 3. Clinical Services | 🔲 Planned | Laboratory, Radiology, Pharmacy |
+| 3. Clinical Services | ✅ Complete | Clinical Orders, Laboratory, Radiology, Pharmacy, Inventory, Cloudinary |
 | 4. Inpatient | 🔲 Planned | Admission, Rooms/Beds, Nurse Station |
 | 5. Operations | 🔲 Planned | Inventory, Procurement, Staff |
 | 6. Financial | 🔲 Planned | Billing, Payments, Accounting, Insurance |
 | 7. Reporting | 🔲 Planned | Reports, Notifications, Dashboards |
 
-## Phase 2 Features
+## Phase 3 Features
 
-- **Patient MPI** — CRUD, search (MRN/name/phone), duplicate detection, merge workflow, soft-delete
-- **Encounters** — 8 encounter types, status lifecycle (registered → waiting → in_triage → ready → in_consultation → completed)
+- **Clinical Orders** — Generalized order architecture (laboratory/radiology/medication), sequential order numbers, status lifecycle (draft→ordered→acknowledged→in_progress→completed)
+- **Laboratory** — Test catalog with categories/panels/reference ranges, specimen collection with accession numbers, result entry with auto abnormal-flag, validate/release workflow, amendment pattern for finalized results
+- **Radiology** — Imaging modalities and procedures catalog, study scheduling/technician workflow, radiologist report editor with draft/finalize lifecycle
+- **Pharmacy** — Medication catalog, prescription management, FEFO dispensing (earliest expiring batch first), walk-in sales
+- **Inventory** — Full stock management: batches with expiration, stock movements (IN/OUT/RETURN/ADJUSTMENT/TRANSFER/EXPIRED), suppliers, reorder alerts, expiry tracking
+- **Documents** — Cloudinary integration for lab/rad attachments (images, PDFs)
+- **Orders UI** — Type-aware order creation form, order list with filters
+- **Queue extension** — Laboratory, radiology, pharmacy queue types
 - **Appointments** — Booking, double-booking prevention, check-in (creates encounter+queue atomically), cancel, no-show
 - **Queue Engine** — Reusable single-table queue with module discriminator (reception/triage/consultation), sequential numbering, priority levels
 - **Triage** — Append-only vitals (temperature, BP, HR, RR, SpO2, weight, height, pain), triage categories, chief complaint
@@ -75,6 +81,9 @@ Open [http://localhost:3000](http://localhost:3000). You'll be redirected to the
 | Doctor | doctor@hospi.local | Doctor123! |
 | Nurse | nurse@hospi.local | Nurse123! |
 | Receptionist | receptionist@hospi.local | Reception123! |
+| Lab Technician | labtech@hospi.local | LabTech123! |
+| Radiologist | radiologist@hospi.local | Radio123! |
+| Pharmacist | pharmacist@hospi.local | Pharma123! |
 
 > **Warning:** Change these passwords in production.
 
@@ -87,8 +96,10 @@ Copy `.env.example` to `.env` and configure:
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `BETTER_AUTH_SECRET` | Yes | Secret key (min 32 chars) |
 | `BETTER_AUTH_URL` | Yes | Base URL (e.g. `http://localhost:3000`) |
-| `CLOUDINARY_*` | No | Cloudinary config (Phase 3+) |
-| `SMTP_*` | No | Email config (Phase 3+) |
+| `CLOUDINARY_*` | No* | Cloudinary config (required for document uploads) |
+| `SMTP_*` | No | Email config (Phase 7+) |
+
+> *Cloudinary vars are optional but required for file upload features to work.
 
 ## Available Scripts
 
@@ -110,40 +121,32 @@ npm run db:seed      # Seed database with initial data
 hospi/
 ├── app/                    # Next.js App Router
 │   ├── (auth)/             # Auth route group (login)
-│   ├── (dashboard)/        # Dashboard pages (patients, reception, appointments, triage, consultation)
-│   └── api/                # API route handlers (28 endpoints)
+│   ├── (dashboard)/        # Dashboard pages (patients, orders, lab, rad, pharmacy...)
+│   └── api/                # API route handlers (70+ endpoints)
 ├── components/
 │   ├── ui/                 # Reusable UI primitives (18 components)
-│   ├── patients/           # Patient form, search, card
-│   ├── queue/              # Queue board, entry card
-│   ├── triage/             # Vitals form
-│   ├── consultation/       # Consultation form
-│   └── appointments/       # Appointment form
+│   ├── orders/             # Order form, order list
+│   ├── laboratory/         # Lab workspace, result entry, catalog
+│   ├── radiology/          # Rad workspace, report form, catalog
+│   ├── pharmacy/           # Dispense, walk-in, catalog
+│   ├── inventory/          # Medication table, batch receive
+│   ├── documents/          # Document upload
+│   └── ... (patients, queue, triage, consultation, appointments)
 ├── db/
-│   ├── schema/             # Drizzle schemas (11 domain files)
+│   ├── schema/             # Drizzle schemas (17 domain files)
 │   └── seed.ts             # Seed script
 ├── lib/
-│   ├── api/                # Route handler utilities
-│   ├── audit/              # Audit logging
-│   ├── auth/               # Better Auth config
-│   ├── db/                 # Drizzle client
-│   ├── errors/             # Error classes + API responses
-│   ├── permissions/        # RBAC constants + checks
+│   ├── cloudinary/         # Cloudinary config + upload
 │   ├── types/              # Status enums
-│   └── validation/         # Zod schemas
-├── modules/                # Domain services (10 modules)
-│   ├── master/             # Departments, services, diagnosis codes
-│   ├── patients/           # Patient CRUD, search, merge
-│   ├── staff/              # Staff profiles
-│   ├── encounters/         # Encounter lifecycle
-│   ├── appointments/       # Booking, check-in, cancel
-│   ├── queue/              # Queue engine
-│   ├── triage/             # Vitals recording
-│   ├── consultation/       # Clinical notes
-│   ├── diagnosis/          # Diagnosis management
-│   └── reception/          # Walk-in orchestration
-├── proxy.ts                # Next.js 16 proxy (auth redirects)
-└── types/                  # Shared TypeScript types
+│   └── ... (auth, db, errors, permissions, audit, validation)
+├── modules/                # Domain services (14 modules)
+│   ├── orders/             # Clinical order management
+│   ├── laboratory/         # Lab catalog + workflow
+│   ├── radiology/          # Rad catalog + workflow
+│   ├── pharmacy/           # Pharmacy + inventory + dispensing
+│   ├── documents/          # Document upload
+│   └── ... (patients, encounters, queue, triage, consultation, etc.)
+└── proxy.ts                # Next.js 16 proxy (auth redirects)
 ```
 
 ## Architecture

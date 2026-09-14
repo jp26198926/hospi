@@ -19,6 +19,10 @@ const navItems = [
   { href: "/appointments", label: "Appointments" },
   { href: "/triage", label: "Triage" },
   { href: "/consultation", label: "Consultation" },
+  { href: "/orders", label: "Orders" },
+  { href: "/laboratory", label: "Laboratory" },
+  { href: "/radiology", label: "Radiology" },
+  { href: "/pharmacy", label: "Pharmacy" },
   { href: "/settings", label: "Settings" },
 ];
 

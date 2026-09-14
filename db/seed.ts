@@ -152,6 +152,179 @@ async function seed() {
   }
   console.log("Patients seeded.");
 
+  // 9. Phase 3 departments
+  const p3Depts = [
+    { id: randomUUID(), name: "Radiology", code: "RAD", description: "Radiology and imaging services" },
+    { id: randomUUID(), name: "Pharmacy", code: "PHARM", description: "Hospital pharmacy" },
+  ];
+  for (const d of p3Depts) {
+    await db.insert(schema.departments).values(d).onConflictDoNothing();
+  }
+  const allDepts = await db.select().from(schema.departments);
+  const dMap = new Map(allDepts.map((d) => [d.code, d.id]));
+  console.log("Phase 3 departments seeded.");
+
+  // 10. Phase 3 users
+  const labTechId = await createUser("labtech@hospi.local", "Lab Technician", "LabTech123!", ROLES.LAB_TECH);
+  const radiologistId = await createUser("radiologist@hospi.local", "Dr. Radiologist", "Radio123!", ROLES.RADIOLOGIST);
+  const pharmacistId = await createUser("pharmacist@hospi.local", "Pharmacist", "Pharma123!", ROLES.PHARMACIST);
+  console.log("Phase 3 users seeded.");
+
+  // 11. Phase 3 staff profiles
+  const p3Staff = [
+    { id: randomUUID(), userId: labTechId, employeeId: "EMP-004", firstName: "Lab", lastName: "Technician", departmentId: dMap.get("LAB")!, title: "RMT" },
+    { id: randomUUID(), userId: radiologistId, employeeId: "EMP-005", firstName: "Dr.", lastName: "Radiologist", departmentId: dMap.get("RAD")!, title: "MD Radiology" },
+    { id: randomUUID(), userId: pharmacistId, employeeId: "EMP-006", firstName: "Pharma", lastName: "Cist", departmentId: dMap.get("PHARM")!, title: "RPh" },
+  ];
+  for (const s of p3Staff) {
+    await db.insert(schema.staffProfiles).values(s).onConflictDoNothing();
+  }
+  console.log("Phase 3 staff seeded.");
+
+  // 12. Lab test categories
+  const catData = [
+    { id: randomUUID(), name: "Hematology", code: "HEM" },
+    { id: randomUUID(), name: "Clinical Chemistry", code: "CHEM" },
+    { id: randomUUID(), name: "Urinalysis", code: "UA" },
+  ];
+  for (const c of catData) {
+    await db.insert(schema.labTestCategories).values(c).onConflictDoNothing();
+  }
+  const catRows = await db.select().from(schema.labTestCategories);
+  const catMap = new Map(catRows.map((c) => [c.code, c.id]));
+  console.log("Lab categories seeded.");
+
+  // 13. Specimen types
+  const specData = [
+    { id: randomUUID(), name: "Blood", code: "BLOOD", handlingNotes: "Lavender top for CBC; red top for chemistry" },
+    { id: randomUUID(), name: "Urine", code: "URINE", handlingNotes: "Midstream clean catch; 10mL sterile container" },
+    { id: randomUUID(), name: "Stool", code: "STOOL", handlingNotes: "Sterile container; deliver within 1 hour" },
+  ];
+  for (const s of specData) {
+    await db.insert(schema.specimenTypes).values(s).onConflictDoNothing();
+  }
+  console.log("Specimen types seeded.");
+
+  // 14. Lab tests
+  const testData = [
+    { id: randomUUID(), code: "HGB", name: "Hemoglobin", categoryId: catMap.get("HEM")!, specimenType: "Blood", unit: "g/dL", referenceRangeLow: "12.0", referenceRangeHigh: "17.0" },
+    { id: randomUUID(), code: "WBC", name: "White Blood Cell Count", categoryId: catMap.get("HEM")!, specimenType: "Blood", unit: "x10^3/uL", referenceRangeLow: "4.0", referenceRangeHigh: "11.0" },
+    { id: randomUUID(), code: "PLT", name: "Platelet Count", categoryId: catMap.get("HEM")!, specimenType: "Blood", unit: "x10^3/uL", referenceRangeLow: "150", referenceRangeHigh: "450" },
+    { id: randomUUID(), code: "GLU", name: "Blood Glucose (Fasting)", categoryId: catMap.get("CHEM")!, specimenType: "Blood", unit: "mg/dL", referenceRangeLow: "70", referenceRangeHigh: "100" },
+    { id: randomUUID(), code: "CREA", name: "Serum Creatinine", categoryId: catMap.get("CHEM")!, specimenType: "Blood", unit: "mg/dL", referenceRangeLow: "0.6", referenceRangeHigh: "1.2" },
+    { id: randomUUID(), code: "CHOL", name: "Total Cholesterol", categoryId: catMap.get("CHEM")!, specimenType: "Blood", unit: "mg/dL", referenceRangeLow: "0", referenceRangeHigh: "200" },
+    { id: randomUUID(), code: "UA-APPEARANCE", name: "Urine Appearance", categoryId: catMap.get("UA")!, specimenType: "Urine", referenceRangeText: "Clear" },
+    { id: randomUUID(), code: "UA-PROTEIN", name: "Urine Protein", categoryId: catMap.get("UA")!, specimenType: "Urine", referenceRangeText: "Negative" },
+    { id: randomUUID(), code: "UA-GLU", name: "Urine Glucose", categoryId: catMap.get("UA")!, specimenType: "Urine", referenceRangeText: "Negative" },
+  ];
+  for (const t of testData) {
+    await db.insert(schema.labTests).values(t).onConflictDoNothing();
+  }
+  const testRows = await db.select().from(schema.labTests);
+  const testMap = new Map(testRows.map((t) => [t.code, t.id]));
+  console.log("Lab tests seeded.");
+
+  // 15. Lab panels
+  const panelData = [
+    { id: randomUUID(), code: "CBC-PANEL", name: "CBC with Differential", description: "Complete blood count" },
+    { id: randomUUID(), code: "FBS-PANEL", name: "Fasting Blood Sugar", description: "Fasting glucose" },
+    { id: randomUUID(), code: "UA-Routine", name: "Routine Urinalysis", description: "Basic urine examination" },
+  ];
+  for (const p of panelData) {
+    await db.insert(schema.labPanels).values(p).onConflictDoNothing();
+  }
+  const panelRows = await db.select().from(schema.labPanels);
+  const panelMap = new Map(panelRows.map((p) => [p.code, p.id]));
+  // Link panel tests
+  const panelTests = [
+    { panelId: panelMap.get("CBC-PANEL")!, testIds: ["HGB", "WBC", "PLT"] },
+    { panelId: panelMap.get("FBS-PANEL")!, testIds: ["GLU"] },
+    { panelId: panelMap.get("UA-Routine")!, testIds: ["UA-APPEARANCE", "UA-PROTEIN", "UA-GLU"] },
+  ];
+  for (const pt of panelTests) {
+    for (const tc of pt.testIds) {
+      const tid = testMap.get(tc);
+      if (tid) {
+        await db.insert(schema.labPanelTests).values({ id: randomUUID(), panelId: pt.panelId, testId: tid }).onConflictDoNothing();
+      }
+    }
+  }
+  console.log("Lab panels seeded.");
+
+  // 16. Imaging modalities
+  const modData = [
+    { id: randomUUID(), code: "XRAY", name: "X-Ray" },
+    { id: randomUUID(), code: "CT", name: "Computed Tomography" },
+    { id: randomUUID(), code: "MRI", name: "Magnetic Resonance Imaging" },
+    { id: randomUUID(), code: "US", name: "Ultrasound" },
+  ];
+  for (const m of modData) {
+    await db.insert(schema.imagingModalities).values(m).onConflictDoNothing();
+  }
+  const modRows = await db.select().from(schema.imagingModalities);
+  const modMap = new Map(modRows.map((m) => [m.code, m.id]));
+  console.log("Imaging modalities seeded.");
+
+  // 17. Radiology procedures
+  const procData = [
+    { id: randomUUID(), code: "CXR-PA", name: "Chest X-Ray PA", modalityId: modMap.get("XRAY")!, bodyPart: "Chest", durationMinutes: 15, prepInstructions: "Remove metal above waist" },
+    { id: randomUUID(), code: "ABD-US", name: "Abdominal Ultrasound", modalityId: modMap.get("US")!, bodyPart: "Abdomen", durationMinutes: 30, prepInstructions: "NPO 8 hours" },
+    { id: randomUUID(), code: "CT-HEAD", name: "CT Head Non-Contrast", modalityId: modMap.get("CT")!, bodyPart: "Head", durationMinutes: 20, prepInstructions: "Remove jewelry" },
+    { id: randomUUID(), code: "MRI-BRAIN", name: "MRI Brain", modalityId: modMap.get("MRI")!, bodyPart: "Brain", durationMinutes: 45, prepInstructions: "No contraindicated metal implants" },
+    { id: randomUUID(), code: "KUB-XR", name: "KUB X-Ray", modalityId: modMap.get("XRAY")!, bodyPart: "Abdomen", durationMinutes: 15, prepInstructions: "Empty bladder" },
+  ];
+  for (const p of procData) {
+    await db.insert(schema.radiologyProcedures).values(p).onConflictDoNothing();
+  }
+  console.log("Radiology procedures seeded.");
+
+  // 18. Suppliers
+  const supplierData = [
+    { id: randomUUID(), name: "PharmaCorp Distribution", contactPerson: "Juan Supplier", phone: "+639170000001" },
+    { id: randomUUID(), name: "MedSupply PH", contactPerson: "Maria Supply", phone: "+639170000002" },
+  ];
+  for (const s of supplierData) {
+    await db.insert(schema.suppliers).values(s).onConflictDoNothing();
+  }
+  const supplierRows = await db.select().from(schema.suppliers);
+  const supMap = new Map(supplierRows.map((s) => [s.name, s.id]));
+  console.log("Suppliers seeded.");
+
+  // 19. Medications
+  const medData = [
+    { id: randomUUID(), genericName: "Paracetamol", brandName: "Biogesic", dosageForm: "tablet", strength: "500mg", unit: "tablet", reorderLevel: 100, sellingPrice: "2.50" },
+    { id: randomUUID(), genericName: "Amoxicillin", brandName: "Amoxil", dosageForm: "capsule", strength: "500mg", unit: "capsule", reorderLevel: 80, sellingPrice: "15.00" },
+    { id: randomUUID(), genericName: "Metformin", brandName: "Glucophage", dosageForm: "tablet", strength: "500mg", unit: "tablet", reorderLevel: 60, sellingPrice: "5.00" },
+    { id: randomUUID(), genericName: "Losartan", brandName: "Cozaar", dosageForm: "tablet", strength: "50mg", unit: "tablet", reorderLevel: 60, sellingPrice: "12.00" },
+    { id: randomUUID(), genericName: "Omeprazole", brandName: "Losec", dosageForm: "capsule", strength: "20mg", unit: "capsule", reorderLevel: 50, sellingPrice: "8.00" },
+  ];
+  for (const m of medData) {
+    await db.insert(schema.medications).values(m).onConflictDoNothing();
+  }
+  const medRows = await db.select().from(schema.medications);
+  const medMap = new Map(medRows.map((m) => [m.genericName, m.id]));
+  console.log("Medications seeded.");
+
+  // 20. Medication batches
+  const now = new Date();
+  const addMonths = (months: number) => {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() + months);
+    return d.toISOString().split("T")[0];
+  };
+  const batchData = [
+    { id: randomUUID(), medicationId: medMap.get("Paracetamol")!, batchNumber: "B-PARA-001", expirationDate: addMonths(18), quantity: 500, supplierId: supMap.get("PharmaCorp Distribution")! },
+    { id: randomUUID(), medicationId: medMap.get("Paracetamol")!, batchNumber: "B-PARA-002", expirationDate: addMonths(6), quantity: 300, supplierId: supMap.get("PharmaCorp Distribution")! },
+    { id: randomUUID(), medicationId: medMap.get("Amoxicillin")!, batchNumber: "B-AMOX-001", expirationDate: addMonths(12), quantity: 400, supplierId: supMap.get("MedSupply PH")! },
+    { id: randomUUID(), medicationId: medMap.get("Metformin")!, batchNumber: "B-MET-001", expirationDate: addMonths(24), quantity: 200, supplierId: supMap.get("MedSupply PH")! },
+    { id: randomUUID(), medicationId: medMap.get("Losartan")!, batchNumber: "B-LOS-001", expirationDate: addMonths(9), quantity: 150, supplierId: supMap.get("PharmaCorp Distribution")! },
+    { id: randomUUID(), medicationId: medMap.get("Omeprazole")!, batchNumber: "B-OME-001", expirationDate: addMonths(3), quantity: 250, supplierId: supMap.get("MedSupply PH")! },
+  ];
+  for (const b of batchData) {
+    await db.insert(schema.medicationBatches).values(b).onConflictDoNothing();
+  }
+  console.log("Medication batches seeded.");
+
   console.log("\nSeed complete.");
   console.log("Logins:");
   console.log("  admin@hospi.local / Admin123!");
