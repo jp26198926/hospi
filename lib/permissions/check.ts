@@ -3,7 +3,12 @@ import { db } from "@/lib/db";
 import { userRoles, rolePermissions, permissions } from "@/db/schema";
 import { ForbiddenError, UnauthorizedError } from "@/lib/errors/classes";
 import { getSession } from "@/lib/auth/session";
+import { env } from "@/lib/env";
 import type { PermissionKey } from "./constants";
+
+function isAdminUser(email: string): boolean {
+  return env.ADMIN_USER !== undefined && email === env.ADMIN_USER;
+}
 
 export async function getUserPermissionKeys(userId: string): Promise<Set<string>> {
   const rows = await db
@@ -26,6 +31,7 @@ export async function hasPermission(
 export async function requirePermission(permission: PermissionKey) {
   const session = await getSession();
   if (!session) throw new UnauthorizedError();
+  if (isAdminUser(session.user.email)) return session;
   const ok = await hasPermission(session.user.id, permission);
   if (!ok) throw new ForbiddenError(`Missing permission: ${permission}`);
   return session;
